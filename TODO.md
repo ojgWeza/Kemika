@@ -70,16 +70,36 @@ done — move it into "Done" rather than leaving it ambiguous.
       Android/iOS builds bundle fonts into the APK/IPA rather than fetching them, so
       this shouldn't reproduce there, but it's unverified until someone checks a real
       build (see the real-device item below).
+- [x] **Redesigned the placeholder visuals to be deliberately DOS/terminal-styled**
+      (`lib/theme/terminal_theme.dart`: black background, phosphor green, monospace,
+      sharp corners, bracket buttons like `[ RECORD OBSERVATION ]`). The previous
+      version used default Material styling (rounded corners, default theme colors) and
+      read as an unfinished/missing graphic rather than an intentional retro look —
+      principle 4 calls for DOS-style *on purpose*. Verified via the same headless
+      screenshot pass; full happy-path flow re-confirmed working with zero errors under
+      the new styling. See `CONSTITUTION.md` § 7.
+- [x] **Added a real in-app Arabic/English toggle** (`[EN]`/`[AR]` chips in the app bar)
+      — Arabic was previously only stored in `AppStrings`, not actually switchable in
+      the running app. Toggling now correctly re-renders all visible text (refactored
+      screen state to hold string *keys*, not resolved strings, so a language switch at
+      any point stays correct) and flips the whole layout's `Directionality` to RTL, not
+      just text alignment — confirmed via screenshot: title/toggle chips/beaker-label
+      arrow all mirror sides correctly. Arabic *glyph shaping itself* wasn't visually
+      confirmed from this sandbox (tofu boxes — see the font-fetch caveat above and
+      `CONSTITUTION.md` § 8); that needs a real device or a differently-configured
+      testing setup.
 
 ## In progress / needs attention right now 🔄
 
 - [ ] Confirm the vertical slice feels right on a *real device* (drag responsiveness,
-      gradual color reveal pacing, whether 5 drips is the right count) — the headless
-      browser pass above confirms the logic is correct, but not real touch-gesture feel
-      or performance on actual hardware. Since you don't want to install anything
-      locally: either grab a built APK from the GitHub Actions artifacts and sideload it
-      onto an Android phone/emulator, or ask a future session to make further
-      adjustments based on your description of how it feels.
+      gradual color reveal pacing, whether 5 drips is the right count), **and** visually
+      confirm Arabic actually shapes correctly (not tofu boxes) once rendered somewhere
+      with real fonts — the headless browser passes above confirm the logic and layout
+      mirroring are correct, but not real touch-gesture feel, performance, or glyph
+      rendering on actual hardware. Since you don't want to install anything locally:
+      either grab a built APK from the GitHub Actions artifacts and sideload it onto an
+      Android phone/emulator, or ask a future session to make further adjustments based
+      on your description of how it looks/feels.
 
 ## Not started yet 📋
 
@@ -101,7 +121,8 @@ done — move it into "Done" rather than leaving it ambiguous.
       lessons) and ambient random incidents (untied to player performance). Two
       genuinely separate systems; don't conflate them.
 - [ ] Social layer — opt-in profile/collection sharing, friend Kemidex comparison
-- [ ] Real DOS-pixel art, replacing the current flat-color placeholder shapes
+- [ ] Real DOS-pixel art, replacing the current flat-color-but-terminal-styled
+      placeholder shapes (see `lib/theme/terminal_theme.dart`)
 - [ ] More ions/reagents beyond chloride + AgNO3
 
 ### Known gaps to resolve before they block something

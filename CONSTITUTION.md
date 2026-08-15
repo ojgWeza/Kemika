@@ -129,12 +129,23 @@ deferred until after the vertical slice proves the core interaction feel — see
 - **Vertical slice first.** The chloride ion (Cl⁻) detected via AgNO3 (→ white AgCl
   precipitate) is the one fully-built lesson end-to-end before Kemidex, Challenge Mode,
   the protagonist system, or additional elements are touched.
-- **Placeholder/programmer art for the prototype.** Beaker/dropper/precipitate are flat
-  colored `Container`/`AnimatedContainer` shapes, not real pixel art. Real DOS-pixel art
-  is a later pass.
-- **Bilingual (Arabic + English) from day one, architecturally**, and unlike the earlier
-  Unity attempt, Arabic actually renders correctly here — no follow-up work needed for
-  basic text rendering itself.
+- **Placeholder/programmer art for the prototype — but deliberately DOS/terminal-styled,
+  not generic Material.** Beaker/dropper/precipitate are still flat `Container`/
+  `AnimatedContainer` shapes (no real pixel art yet), but styled via
+  `lib/theme/terminal_theme.dart`: black background, phosphor green, monospace,
+  sharp corners, bracket-style buttons (`[ RECORD OBSERVATION ]`). The first version of
+  this screen used default Material (rounded corners, default theme colors) and read as
+  "unfinished placeholder" rather than "intentionally retro" — principle 4 calls for the
+  DOS look on purpose, not by omission. Real pixel art replaces this incrementally
+  later; reuse the `Terminal*` widgets for anything new in the meantime.
+- **Bilingual (Arabic + English) from day one, architecturally, with a real in-app
+  toggle** (the app bar's `[EN]`/`[AR]` chips in `PracticeSliceScreen`) — this isn't just
+  stored strings anymore, it's actually switchable. Toggling also flips the whole
+  layout's `Directionality` (RTL for Arabic), not just text alignment. Unlike the
+  earlier Unity attempt, the underlying Flutter engine renders Arabic correctly (proven
+  on a real device by prayer-qibla-app) — but see § 8 for a testing-environment caveat:
+  this hasn't been visually confirmed shaped-correctly (vs. tofu boxes) from *this*
+  repo's own sandbox yet, only asserted from the sibling project's precedent.
 - **Low-end-Android-friendly** is the device baseline (Android 8+, low RAM/GPU); iOS is
   a secondary target. The DOS-pixel visual style (once real art lands) is a deliberate
   hedge against this — minimal GPU/fill-rate cost.
@@ -181,3 +192,21 @@ session doesn't pay the same cost.
   for any future reaction whose result color is white (or matches whatever the "empty"
   state uses), explicitly pick a starting color with contrast — don't assume `lerp` is
   enough on its own.
+- **Special/non-Latin glyphs render as tofu boxes in this sandbox's headless-browser
+  testing** — both the ⁺/⁻/↓ superscript characters in the equation feedback and Arabic
+  script after toggling `[AR]`. Root cause is specific to *this testing setup*, not the
+  app: `flutter build web --no-web-resources-cdn` (see above) stops CanvasKit fetching
+  from the CDN, but web fonts (Roboto etc.) still try to fetch from `fonts.gstatic.com`
+  and fail in a network-restricted sandbox, so the browser falls back to whatever glyphs
+  its local system fonts happen to have — which may be none for Arabic shaping. This is
+  a *Flutter web* + *sandboxed testing* combination specifically; real Android/iOS
+  builds don't fetch fonts over the network at all (bundled in the APK/IPA, falling back
+  to the OS's own font manager for glyphs the bundled font lacks) — the same mechanism
+  prayer-qibla-app already relies on for its correct Arabic rendering on a real device.
+  Net effect: don't read a tofu-box screenshot from this sandbox as "Arabic is broken" —
+  it isn't verified either way from here. Confirming real shaping needs either a real
+  device/emulator, or a local Chromium with Arabic-capable fonts installed (there's a
+  Noto Naskh Arabic font bundled inside the Flutter engine's own test assets at
+  `<flutter-sdk>/engine/src/flutter/txt/third_party/fonts/NotoNaskhArabic-Regular.ttf`,
+  unexplored as a fix — CanvasKit fonts aren't loaded through the browser's normal font
+  stack, so getting it recognized isn't a simple system-font install).

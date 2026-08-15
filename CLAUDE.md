@@ -34,10 +34,24 @@ See `CONSTITUTION.md` § 4 for the full breakdown. Short version:
   on (see `TODO.md`).
 - `lib/l10n/` — `AppStrings`, a plain bilingual map (mirrors prayer-qibla-app's
   `app_strings.dart`). Add new UI text here, not as string literals in widget code.
+  `AppStrings.current` is mutable global state (an `AppLanguage` enum), flipped by the
+  app bar's EN/AR toggle in `PracticeSliceScreen`. Any widget displaying localized text
+  must read `AppStrings.get(key)` **inside `build()`**, not cache the resolved string in
+  a field at the moment it was set — screen state stores string *keys*
+  (`_instructionKey`, `_feedbackKey`), not resolved text, specifically so a language
+  toggle re-renders correctly no matter when it happens.
+- `lib/theme/terminal_theme.dart` — the DOS/terminal visual language (black background,
+  phosphor green, monospace, sharp corners, bracket-styled buttons like
+  `[ RECORD OBSERVATION ]`). This is CONSTITUTION.md principle 4's placeholder art done
+  *on purpose* — reuse `TerminalButton`/`TerminalToggleChip`/`TerminalColors` for any
+  new UI rather than reaching for default Material widgets, or new screens will look
+  inconsistent with this one.
 - `lib/screens/` — `PracticeSliceScreen` is the only screen so far. It owns the
   `PracticeModeController` instance and calls `setState` from its callbacks — no
   external state management package, matching prayer-qibla-app's stated approach ("the
-  app isn't big enough yet to justify one").
+  app isn't big enough yet to justify one"). Its `build()` wraps everything in a
+  `Directionality` keyed off `AppStrings.current` so the whole layout (app bar included)
+  mirrors correctly for Arabic, not just the text alignment.
 
 ## Working conventions (mirrors prayer-qibla-app where applicable)
 

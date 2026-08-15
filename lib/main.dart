@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'screens/practice_slice_screen.dart';
+import 'theme/terminal_theme.dart';
 
 void main() {
   runApp(const KemikaApp());
@@ -14,10 +15,7 @@ class KemikaApp extends StatelessWidget {
     return MaterialApp(
       title: 'Kemika',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2E7D6B)),
-        useMaterial3: true,
-      ),
+      theme: buildTerminalTheme(),
       home: const PracticeSliceScreen(),
     );
   }

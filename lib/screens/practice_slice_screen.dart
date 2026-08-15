@@ -5,6 +5,7 @@ import '../data/reaction.dart';
 import '../data/reagent.dart';
 import '../l10n/app_strings.dart';
 import '../modes/practice_mode_controller.dart';
+import '../theme/terminal_theme.dart';
 
 /// The chloride + AgNO3 vertical slice: one full lesson end-to-end (drag reagent ->
 /// drip -> observe -> record), built to validate the "no result without action" loop
@@ -28,8 +29,11 @@ class _PracticeSliceScreenState extends State<PracticeSliceScreen> {
   late final PracticeModeController _controller;
 
   Color _beakerColor = _emptySolutionColor;
-  String _instruction = '';
-  String _feedback = '';
+  // Keys into AppStrings, not raw strings, so a language toggle at any point
+  // re-renders correctly instead of leaving stale-language text on screen
+  // from whenever it was first set.
+  String _instructionKey = 'slice.instruction';
+  String? _feedbackKey;
   bool _readyToRecord = false;
 
   @override
@@ -45,10 +49,9 @@ class _PracticeSliceScreenState extends State<PracticeSliceScreen> {
       ..onReadyToRecord = () {
         setState(() {
           _readyToRecord = true;
-          _instruction = AppStrings.get('slice.recordPrompt');
+          _instructionKey = 'slice.recordPrompt';
         });
       };
-    _instruction = AppStrings.get('slice.instruction');
   }
 
   Reaction _buildChlorideVsSilverNitrateReaction() {
@@ -88,33 +91,37 @@ class _PracticeSliceScreenState extends State<PracticeSliceScreen> {
     );
   }
 
+  void _toggleLanguage(AppLanguage language) {
+    if (AppStrings.current == language) return;
+    setState(() => AppStrings.current = language);
+  }
+
   void _openObservationPanel() {
     final optionsEn = _reaction.distractorDescriptionsEn;
     final optionsAr = _reaction.distractorDescriptionsAr;
     final correctIndex = optionsEn.indexOf(_reaction.resultDescriptionEn);
+    final rtl = AppStrings.current == AppLanguage.arabic;
 
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(AppStrings.get('slice.recordPrompt')),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (var i = 0; i < optionsEn.length; i++)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
+        return Directionality(
+          textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+          child: AlertDialog(
+            title: Text(AppStrings.get('slice.recordPrompt')),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < optionsEn.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: TerminalButton(
+                      label: '${i + 1}. ${rtl ? optionsAr[i] : optionsEn[i]}',
                       onPressed: () => _chooseObservation(dialogContext, i, correctIndex),
-                      child: Text(
-                        AppStrings.current == AppLanguage.arabic ? optionsAr[i] : optionsEn[i],
-                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -125,64 +132,88 @@ class _PracticeSliceScreenState extends State<PracticeSliceScreen> {
     final correct = chosenIndex == correctIndex;
     _controller.recordObservation(correct);
     setState(() {
-      _feedback = correct
-          ? '${AppStrings.get('slice.correct')} ${_reaction.equationText}'
-          : AppStrings.get('slice.incorrect');
+      _feedbackKey = correct ? 'slice.correct' : 'slice.incorrect';
     });
     Navigator.of(dialogContext).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Kemika')),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              Text(_instruction, textAlign: TextAlign.center),
-              if (_feedback.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text(
-                  _feedback,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+    final rtl = AppStrings.current == AppLanguage.arabic;
+    final feedbackKey = _feedbackKey;
+
+    return Directionality(
+      textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('C:\\KEMIKA>_'),
+          actions: [
+            TerminalToggleChip(
+              label: 'EN',
+              active: !rtl,
+              onTap: () => _toggleLanguage(AppLanguage.english),
+            ),
+            TerminalToggleChip(
+              label: 'AR',
+              active: rtl,
+              onTap: () => _toggleLanguage(AppLanguage.arabic),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                Text(AppStrings.get(_instructionKey), textAlign: TextAlign.center),
+                if (feedbackKey != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    feedbackKey == 'slice.correct'
+                        ? '${AppStrings.get(feedbackKey)} ${_reaction.equationText}'
+                        : AppStrings.get(feedbackKey),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+                const Spacer(),
+                DragTarget<String>(
+                  onAcceptWithDetails: (_) => _controller.addDrop(),
+                  builder: (context, candidateData, rejectedData) {
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: 220,
+                      height: 260,
+                      alignment: Alignment.topCenter,
+                      padding: const EdgeInsets.only(top: 8),
+                      decoration: BoxDecoration(
+                        color: _beakerColor,
+                        border: Border.all(color: TerminalColors.green, width: 2),
+                      ),
+                      child: Text(
+                        '> ${AppStrings.get('slice.beakerLabel')}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.black87),
+                      ),
+                    );
+                  },
                 ),
+                const Spacer(),
+                Draggable<String>(
+                  data: 'drop',
+                  feedback: _dropperVisual(),
+                  childWhenDragging: Opacity(opacity: 0.3, child: _dropperVisual()),
+                  child: _dropperVisual(),
+                ),
+                const Spacer(),
+                TerminalButton(
+                  label: AppStrings.get('slice.recordButton'),
+                  onPressed: _readyToRecord ? _openObservationPanel : null,
+                ),
+                const SizedBox(height: 16),
               ],
-              const Spacer(),
-              DragTarget<String>(
-                onAcceptWithDetails: (_) => _controller.addDrop(),
-                builder: (context, candidateData, rejectedData) {
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    width: 220,
-                    height: 260,
-                    alignment: Alignment.topCenter,
-                    padding: const EdgeInsets.only(top: 8),
-                    decoration: BoxDecoration(
-                      color: _beakerColor,
-                      border: Border.all(color: Colors.black87, width: 3),
-                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
-                    ),
-                    child: Text(AppStrings.get('slice.beakerLabel'), textAlign: TextAlign.center),
-                  );
-                },
-              ),
-              const Spacer(),
-              Draggable<String>(
-                data: 'drop',
-                feedback: _dropperVisual(),
-                childWhenDragging: Opacity(opacity: 0.3, child: _dropperVisual()),
-                child: _dropperVisual(),
-              ),
-              const Spacer(),
-              ElevatedButton(
-                onPressed: _readyToRecord ? _openObservationPanel : null,
-                child: Text(AppStrings.get('slice.recordButton')),
-              ),
-              const SizedBox(height: 16),
-            ],
+            ),
           ),
         ),
       ),
@@ -195,8 +226,7 @@ class _PracticeSliceScreenState extends State<PracticeSliceScreen> {
       height: 90,
       decoration: BoxDecoration(
         color: _reaction.reagent.dropperTint,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black54, width: 2),
+        border: Border.all(color: TerminalColors.green, width: 2),
       ),
     );
   }
