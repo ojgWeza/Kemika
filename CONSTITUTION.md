@@ -148,3 +148,36 @@ deferred until after the vertical slice proves the core interaction feel — see
   Android Studio, an Android SDK, or even a local Flutter install to get a working APK
   out of this repo; push to `main` (or open a PR) and download it from the GitHub
   Actions run's artifacts.
+
+## 8. Learnt lessons
+
+A living log. Add to this whenever something costs real time to figure out, so the next
+session doesn't pay the same cost.
+
+- **Testing a Flutter *web* build in a network-restricted/sandboxed environment**:
+  `flutter build web` fetches CanvasKit and web fonts from `gstatic.com` by default
+  (`--web-resources-cdn` defaults to on). If outbound requests to that CDN are blocked,
+  the app never renders past a blank canvas (`ERR_TUNNEL_CONNECTION_FAILED` /
+  "Failed to fetch dynamically imported module"). Fix: `flutter build web
+  --no-web-resources-cdn`, which bundles CanvasKit locally (confirms via
+  `"useLocalCanvasKit":true` in the emitted `flutter_bootstrap.js`) — then serve
+  `build/web/` with any static file server. `flutter run -d web-server` does *not* avoid
+  this; it still points at the CDN, so use a full `build web` instead for
+  headless/offline testing. (Fonts still fail to fetch if genuinely offline — that's
+  cosmetic only, doesn't block rendering.)
+- **Driving a CanvasKit-rendered Flutter web app with Playwright**: there are no real
+  DOM text nodes — Flutter's accessibility/semantics tree is off by default, so
+  `page.getByText(...)`-style selectors find nothing even though the text is clearly
+  visible on screen. Drive by screen coordinates (`page.mouse.move/down/up` for drags,
+  `page.mouse.click(x, y)` for taps) and verify by screenshot instead.
+- **The chloride/AgNO3 vertical slice's "gradual color reveal" was invisible on
+  screen**, caught only by actually driving the app end-to-end (not by reading the
+  code): the beaker's starting color and the AgCl precipitate's result color were both
+  `Colors.white`, so `Color.lerp(white, white, progress)` never visibly changes no
+  matter how many drips are delivered — even though the underlying `progress`/
+  `dropCount` state was advancing correctly the whole time. Fixed by giving the empty
+  "unknown solution" a distinct pale-blue starting color (`practice_slice_screen.dart`,
+  `_emptySolutionColor`) so the transition to opaque white is actually visible. Lesson:
+  for any future reaction whose result color is white (or matches whatever the "empty"
+  state uses), explicitly pick a starting color with contrast — don't assume `lerp` is
+  enough on its own.

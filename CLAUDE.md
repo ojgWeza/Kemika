@@ -59,9 +59,19 @@ See `CONSTITUTION.md` § 4 for the full breakdown. Short version:
   this repo yet, see `CONSTITUTION.md` § Known gaps — apply the same standard by eye
   until it is). Placeholder art for the prototype is fine and expected (see
   `CONSTITUTION.md` § 7) — placeholder *copy* is not.
-- **Before pushing**: `flutter analyze` and `flutter test` must both be clean. CI
-  (`.github/workflows/build.yml`) re-runs both plus a debug APK build on every push/PR —
-  catching problems locally first is still cheaper than waiting on CI.
+- **Before pushing**: `flutter analyze` must be clean (`flutter test` isn't run yet —
+  see `CONSTITUTION.md` § 7, no test files exist). CI (`.github/workflows/build.yml`)
+  re-runs analyze plus a debug APK build on every push/PR — catching problems locally
+  first is still cheaper than waiting on CI.
+- **Testing UI changes without a device**: this project has no dedicated run-skill yet
+  (worth generating one via `/run-skill-generator` if you do this again). The working
+  recipe: add the web platform if not already present (`flutter create --platforms=web
+  .`), then `flutter build web --no-web-resources-cdn` (plain `flutter run -d
+  web-server` still hits a CDN and will fail in a network-restricted sandbox — see
+  `CONSTITUTION.md` § 8), serve `build/web/` with any static server, and drive it with
+  Playwright by screen coordinates + screenshots (not text selectors — CanvasKit has no
+  real DOM text). Full details and the exact gotchas hit doing this: `CONSTITUTION.md`
+  § 8 "Learnt lessons".
 
 ## Environment notes
 
@@ -69,7 +79,7 @@ See `CONSTITUTION.md` § 4 for the full breakdown. Short version:
   signing.** Debug + release APKs are built by GitHub Actions on every push to `main`
   (see `.github/workflows/build.yml`) and uploaded as workflow run artifacts — same
   pattern as prayer-qibla-app. If you only have the Flutter SDK locally (no Android
-  Studio), `flutter analyze`/`flutter test` still work fully offline.
+  Studio), `flutter analyze` still works fully offline.
 - If Flutter itself isn't installed locally and you don't want to install it either: any
   change can be made, analyzed, and pushed from a cloud Claude Code session the same way
   this repo was originally scaffolded — clone the `flutter` SDK repo

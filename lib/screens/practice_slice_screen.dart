@@ -17,10 +17,17 @@ class PracticeSliceScreen extends StatefulWidget {
 }
 
 class _PracticeSliceScreenState extends State<PracticeSliceScreen> {
+  // A clear aqueous solution, not white -- so the gradual reveal toward the
+  // (also white) AgCl precipitate is actually visible. Using plain white for
+  // both ends of the lerp made the "gradual reveal" invisible on screen even
+  // though the underlying drip-count state was advancing correctly --
+  // caught by actually driving the app, not just reading the code.
+  static const _emptySolutionColor = Color(0xFFDCE8ED);
+
   late final Reaction _reaction;
   late final PracticeModeController _controller;
 
-  Color _beakerColor = Colors.white;
+  Color _beakerColor = _emptySolutionColor;
   String _instruction = '';
   String _feedback = '';
   bool _readyToRecord = false;
@@ -32,7 +39,7 @@ class _PracticeSliceScreenState extends State<PracticeSliceScreen> {
     _controller = PracticeModeController(_reaction)
       ..onProgressChanged = (progress) {
         setState(() {
-          _beakerColor = Color.lerp(Colors.white, _reaction.resultColor, progress)!;
+          _beakerColor = Color.lerp(_emptySolutionColor, _reaction.resultColor, progress)!;
         });
       }
       ..onReadyToRecord = () {

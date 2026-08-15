@@ -42,15 +42,31 @@ done — move it into "Done" rather than leaving it ambiguous.
       CONSTITUTION.md). Re-add the step when the first real test file lands.
 - [x] `CLAUDE.md`, `CONSTITUTION.md`, `TODO.md`, `README.md` rewritten for the Flutter
       stack (all were originally written for Unity, before the pivot).
+- [x] **Drove the vertical slice end-to-end in a headless browser** (Flutter web build +
+      Playwright, no Android SDK/emulator needed) and confirmed the full loop actually
+      works: beaker starts as an empty solution, "Record Observation" stays disabled
+      until exactly 5 real drips are delivered, the dialog shows all 4 options, picking
+      the correct one shows the equation feedback. Caught and fixed one real bug in the
+      process (see below) that reading the code alone would never have surfaced.
+- [x] **Fixed: the gradual color reveal was invisible on screen.** Beaker start color and
+      the AgCl result color were both white, so the drip-by-drip `Color.lerp` never
+      visibly changed even though the underlying state was correct. Gave the empty
+      solution a distinct pale-blue color instead. Full writeup: `CONSTITUTION.md` § 8.
+- [x] Added the `web` platform (`flutter create --platforms=web .`) as a **dev/testing
+      convenience only** — not a third shipping target (still Android-first, iOS
+      second, per the settled decision). Lets any future session sanity-check UI
+      changes in a headless browser without Android tooling. See `CLAUDE.md`
+      "Environment notes" for the exact recipe (there's a CDN gotcha to route around).
 
 ## In progress / needs attention right now 🔄
 
-- [ ] Confirm the vertical slice actually feels right once played for real (drag
-      responsiveness, gradual color reveal pacing, whether 5 drips is the right count).
-      Since you don't want to install anything locally: either grab a built APK from the
-      GitHub Actions artifacts and sideload it onto an Android phone, or ask a future
-      session to make further adjustments based on your description of how it feels —
-      this doesn't require you to run Flutter yourself either way.
+- [ ] Confirm the vertical slice feels right on a *real device* (drag responsiveness,
+      gradual color reveal pacing, whether 5 drips is the right count) — the headless
+      browser pass above confirms the logic is correct, but not real touch-gesture feel
+      or performance on actual hardware. Since you don't want to install anything
+      locally: either grab a built APK from the GitHub Actions artifacts and sideload it
+      onto an Android phone/emulator, or ask a future session to make further
+      adjustments based on your description of how it feels.
 
 ## Not started yet 📋
 
