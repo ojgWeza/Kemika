@@ -24,8 +24,11 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
-      - name: Run tests
-        run: flutter test
+      # No test step yet: `flutter test` fails with a nonzero exit code when the
+      # `test/` directory has zero test files (not just a soft "no tests found"),
+      # and this repo deliberately has no automated tests yet -- see CONSTITUTION.md
+      # "Settled feature decisions". Re-add `flutter test` here as soon as the first
+      # real test file exists.
 
       - name: Build debug APK
         run: flutter build apk --debug

@@ -30,10 +30,16 @@ done — move it into "Done" rather than leaving it ambiguous.
       (correct + 3 distractors) → correct choice reveals the balanced equation.
 - [x] `flutter analyze` clean, no issues.
 - [x] `.github/workflows/build.yml` — mirrors prayer-qibla-app's CI: `flutter analyze` +
-      `flutter test` + debug APK build on every push/PR, release APK build + upload on
-      pushes to `main`. **You do not need Flutter, Android Studio, or an Android SDK
-      installed anywhere to get a working APK out of this repo** — push to `main` (or
-      open a PR) and download the built APK from that GitHub Actions run's artifacts.
+      debug APK build on every push/PR, release APK build + upload on pushes to `main`.
+      **You do not need Flutter, Android Studio, or an Android SDK installed anywhere to
+      get a working APK out of this repo** — push to `main` (or open a PR) and download
+      the built APK from that GitHub Actions run's artifacts.
+- [x] Verified the CI build actually goes green on a real GitHub-hosted runner (not just
+      locally): the first run failed because `flutter test` exits nonzero when `test/`
+      has zero test files (git doesn't track empty directories, so the folder wasn't
+      even present in the checkout) — removed the test step from CI rather than add a
+      token test just to satisfy it, since "no tests yet" was a deliberate decision (see
+      CONSTITUTION.md). Re-add the step when the first real test file lands.
 - [x] `CLAUDE.md`, `CONSTITUTION.md`, `TODO.md`, `README.md` rewritten for the Flutter
       stack (all were originally written for Unity, before the pivot).
 

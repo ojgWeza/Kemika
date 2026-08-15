@@ -139,9 +139,11 @@ deferred until after the vertical slice proves the core interaction feel — see
   a secondary target. The DOS-pixel visual style (once real art lands) is a deliberate
   hedge against this — minimal GPU/fill-rate cost.
 - **Testing**: no automated tests yet — added once the vertical slice proves the
-  interaction "feel" is right, not before. CI (`flutter analyze` + `flutter test` +
-  debug APK build) is wired up regardless, so regressions in what does exist are still
-  caught.
+  interaction "feel" is right, not before. CI (`flutter analyze` + debug APK build) is
+  wired up regardless, so regressions in what does exist are still caught. `flutter
+  test` is deliberately *not* in CI yet — it exits nonzero with zero test files present
+  (confirmed the hard way: the first CI run failed on exactly this), so it goes back in
+  the moment the first real test file lands, not before.
 - **CI builds the APK, not your machine** — same as prayer-qibla-app. You don't need
   Android Studio, an Android SDK, or even a local Flutter install to get a working APK
   out of this repo; push to `main` (or open a PR) and download it from the GitHub
