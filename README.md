@@ -7,8 +7,7 @@ learn qualitative/quantitative analytical chemistry by *doing* lab actions thems
 instead of memorizing result tables.
 
 Read `CONSTITUTION.md` before making any design decisions, and `TODO.md` for current
-status — especially the "First local setup" section if this is your first time opening
-the project.
+status.
 
 ## Status
 
@@ -19,7 +18,16 @@ on top of it.
 
 ## Tech
 
-- Unity 6 LTS, 2D, targeting Android first (low-end-friendly) and iOS second
+- **Flutter/Dart**, targeting Android first (low-end-friendly) and iOS second
 - No backend for the prototype — everything runs locally
-- Bilingual (Arabic/English) string architecture from day one; see `CONSTITUTION.md`
-  "Known gaps" for the current state of Arabic rendering specifically
+- Bilingual (Arabic/English) from day one — see `lib/l10n/app_strings.dart`
+- No local Android/iOS SDK required: GitHub Actions builds the APK on every push to
+  `main` (see `.github/workflows/build.yml`) and uploads it as a workflow artifact,
+  same pattern as this project's sibling, `prayer-qibla-app`
+
+## Getting started (optional — CI can build this without any local setup)
+
+```
+flutter pub get
+flutter run
+```

@@ -5,62 +5,46 @@ done — move it into "Done" rather than leaving it ambiguous.
 
 ## Done ✅
 
-- [x] Repo created (`ojgWeza/kemika`, public), scaffolded from a remote/cloud session
-      with no access to a local Unity install or `D:\hcode` — see "First local setup"
-      below for the one-time step this leaves for you.
-- [x] `.gitignore` for Unity (Library/, Temp/, Obj/, Build/, *.csproj, etc.)
-- [x] Minimal `ProjectSettings/ProjectVersion.txt` (targets Unity 6 LTS) and
-      `Packages/manifest.json` (hand-written, minimal — see Known Gaps in
-      `CONSTITUTION.md`)
-- [x] Core data model: `IonSpecies`, `Reagent`, `Reaction` (`Kemika.Data`, all
-      `ScriptableObject`s)
-- [x] `DropperDragHandler` (`Kemika.Interaction`) — drag-and-release-over-target
-      mechanic, the only input path that can register a "drip"
-- [x] `PracticeModeController` (`Kemika.Modes`) — drip → gradual reveal → record loop,
+- [x] Repo created (`ojgWeza/kemika`, public)
+- [x] **Rebuilt on Flutter/Dart, replacing the initial Unity/C# scaffold**, before any
+      real Unity work happened — the user doesn't want to install or personally operate
+      a game-engine editor (limited local disk, prefers not to touch it directly), and
+      already runs the exact same Flutter-with-no-local-Android-SDK-CI-builds-the-APK
+      setup for `prayer-qibla-app`. See `CONSTITUTION.md` § 3 for the full reasoning.
+      No Unity content remains in this repo.
+- [x] Real Flutter project generated via `flutter create` (not hand-authored) —
+      `pubspec.yaml`, `android/`, `ios/`, `analysis_options.yaml`, `.metadata` are all
+      genuine Flutter-CLI output, so there's no fragile hand-guessed project config
+      anywhere in this repo.
+- [x] Core data model: `IonSpecies`, `Reagent`, `Reaction` (`lib/data/`)
+- [x] `PracticeModeController` (`lib/modes/`) — drip → gradual reveal → record loop,
       enforces law 1 ("no result without action")
-- [x] `LocalizedStrings` (`Kemika.Localization`) — bilingual AR/EN string map, same
-      shape as prayer-qibla-app's `AppStrings`
-- [x] **Vertical slice: chloride detection via AgNO3.** `SliceBootstrap` builds the whole
-      thing procedurally at runtime (no scene authoring needed): a beaker, a draggable
-      AgNO3 dropper, gradual white-precipitate color reveal over 5 drips, a
-      Record Observation step with 4 multiple-choice descriptions (correct + 3
-      distractors), and a feedback banner showing the balanced equation once answered
-      correctly.
-- [x] `CLAUDE.md`, `CONSTITUTION.md`, `TODO.md` created (prayer-qibla-app had
-      `CONSTITUTION.md`/`TODO.md` in this same shape; it did **not** have a `CLAUDE.md`
-      to copy — this one was written from scratch using Unity C# best judgment, flagged
-      per instructions)
-
-## First local setup (do this once, before anything else) 🔧
-
-- [ ] **Clone the repo** to `D:\hcode\kemika` (if not already there):
-      `git clone https://github.com/ojgWeza/kemika D:\hcode\kemika`
-- [ ] **Install Unity Hub** if you don't have it, then install **Unity 6 LTS**
-      (whatever exact patch Hub offers as the current LTS — `ProjectSettings/ProjectVersion.txt`
-      will just update itself to match on first open, that's normal)
-- [ ] **Open the project**: Unity Hub → "Open" → browse to `D:\hcode\kemika` → select it.
-      Unity will generate the missing `Library/`, and may show a Package Manager
-      resolution prompt for the hand-written `manifest.json` — accept/let it resolve.
-- [ ] Unity will show an empty Hierarchy/no scene the very first time (this repo has no
-      `.unity` scene file — hand-authoring one outside the Editor is too fragile to be
-      worth the risk, see `CONSTITUTION.md`). Do this **once**: `File → New Scene` →
-      `Ctrl+S` → save it as `Assets/_Project/Scenes/Bootstrap.unity`. That's it — no
-      GameObjects need to be added, nothing needs to be wired up by hand.
-- [ ] **Press Play.** The chloride/AgNO3 vertical slice should build itself and be fully
-      playable: drag the dropper onto the beaker 5 times, watch it turn white, tap
-      "Record Observation," pick the matching description.
-- [ ] If dragging doesn't respond to input: `Edit → Project Settings → Player → Active
-      Input Handling` — set to "Input Manager (Old)" or "Both." (The scaffold uses the
-      legacy `StandaloneInputModule`; a project defaulting to "Input System Package
-      (New)" only would need this.)
+- [x] `AppStrings` (`lib/l10n/`) — bilingual AR/EN string map, same shape as
+      prayer-qibla-app's `AppStrings`. Unlike the original Unity attempt, Arabic
+      actually renders correctly here (Flutter has real bidi/RTL text shaping) — no
+      follow-up work needed for that specifically.
+- [x] **Vertical slice: chloride detection via AgNO3** (`lib/screens/practice_slice_screen.dart`).
+      Drag the AgNO3 dropper onto the beaker 5 times (`Draggable`/`DragTarget`) → the
+      beaker's color gradually lerps to white via `AnimatedContainer` → "Record
+      Observation" button enables → a dialog with 4 multiple-choice descriptions
+      (correct + 3 distractors) → correct choice reveals the balanced equation.
+- [x] `flutter analyze` clean, no issues.
+- [x] `.github/workflows/build.yml` — mirrors prayer-qibla-app's CI: `flutter analyze` +
+      `flutter test` + debug APK build on every push/PR, release APK build + upload on
+      pushes to `main`. **You do not need Flutter, Android Studio, or an Android SDK
+      installed anywhere to get a working APK out of this repo** — push to `main` (or
+      open a PR) and download the built APK from that GitHub Actions run's artifacts.
+- [x] `CLAUDE.md`, `CONSTITUTION.md`, `TODO.md`, `README.md` rewritten for the Flutter
+      stack (all were originally written for Unity, before the pivot).
 
 ## In progress / needs attention right now 🔄
 
-- [ ] Verify the vertical slice actually feels right once played for real (drag
-      responsiveness, gradual color reveal pacing, whether 5 drips is the right count)
-      — this is the actual point of building it first, per the agreed prototype-first
-      approach. Adjust `requiredDripCount` / drag sensitivity based on real feedback
-      before building anything else on top.
+- [ ] Confirm the vertical slice actually feels right once played for real (drag
+      responsiveness, gradual color reveal pacing, whether 5 drips is the right count).
+      Since you don't want to install anything locally: either grab a built APK from the
+      GitHub Actions artifacts and sideload it onto an Android phone, or ask a future
+      session to make further adjustments based on your description of how it feels —
+      this doesn't require you to run Flutter yourself either way.
 
 ## Not started yet 📋
 
@@ -71,8 +55,9 @@ done — move it into "Done" rather than leaving it ambiguous.
 
 ### Core systems (deliberately deferred until the slice is validated)
 - [ ] `StudentProfile` / `KemidexEntry` — persistent per-element progress stage, attempt
-      history (the current `PracticeModeController.AttemptRecord` list is per-session
-      only, not persisted)
+      history (the current `PracticeModeController.attempts` list is per-session/
+      in-memory only, not persisted — prayer-qibla-app uses `SharedPreferences` via a
+      `PrefsService` for its local persistence; the same approach fits here)
 - [ ] Kemidex UI — 3-stage collectible card (Discovered / Mastered / Fully Mastered),
       visual-fidelity-as-reward system
 - [ ] `ChallengeModeController` — timed recall mode, gated on a Practice Mode mastery
@@ -85,29 +70,25 @@ done — move it into "Done" rather than leaving it ambiguous.
 - [ ] More ions/reagents beyond chloride + AgNO3
 
 ### Known gaps to resolve before they block something
-- [ ] **Arabic text rendering.** Legacy `UI.Text` doesn't shape Arabic correctly (no
-      bidi/glyph joining). Needs TextMeshPro + an RTL/shaping solution, or a runtime
-      Arabic-reshaping library, before Arabic is actually usable — not just stored as
-      strings. See `CONSTITUTION.md` § Known gaps.
-- [ ] `Packages/manifest.json` was hand-written outside the Editor with a minimal
-      package set — revisit once real 2D/sprite/animation packages are needed (e.g.
-      `com.unity.2d.sprite` for real pixel art import), since those weren't included to
-      avoid guessing at registry version numbers that might not resolve.
-- [ ] No `.unity` scene is committed yet — the first local setup step above has you
-      create one. Once created, commit it (and its `.meta` file) so future clones don't
-      need to repeat that step.
+- [ ] `impeccable_flutter_lints` + `custom_lint` (prayer-qibla-app's "AI-slop UI"
+      design-lint tooling) isn't wired into this repo's CI yet. Worth adding once the UI
+      surface grows past one screen, for consistency with the sibling project.
+- [ ] No real device testing yet — the "low-end-Android-friendly" device target is a
+      stated goal, not yet verified against real hardware.
 
 ### Before any real release
-- [ ] iOS build target setup (currently Android is the only concretely-planned/tested
-      target; iOS was in original scope but nothing iOS-specific has been touched)
-- [ ] Real device testing on a low-end Android phone (device floor is a stated goal, not
-      yet verified against real hardware)
+- [ ] iOS build target: `flutter create` generated the `ios/` folder, but nothing
+      iOS-specific has been tested or built (needs a macOS CI runner or a Mac; a Windows
+      machine alone can't build/sign iOS apps — same constraint as any Flutter project)
+- [ ] Real device testing on a low-end Android phone
 - [ ] Decide on real backend infra for Challenge Mode's "vs friends" layer, once/if the
       local-mock version proves the feature is worth building for real
+- [ ] Real app icon, app name/`applicationId` decision, Play Store listing — all still
+      using Flutter's defaults from `flutter create`
 
 ## Notes
 
 - Read `CONSTITUTION.md` before starting any new work — it has the project rules
   (especially law 1: "no result without action") and the known-gaps/decision log.
-- This repo has no CI yet (prayer-qibla-app's GitHub Actions APK-build pattern hasn't
-  been ported here) — add one once there's a real build target worth automating.
+- Every item here should pass `flutter analyze` + `flutter test` before being considered
+  done (no `custom_lint` yet — see Known Gaps above).

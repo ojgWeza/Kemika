@@ -20,10 +20,10 @@ Content depth should not be artificially capped to match the syllabus.
    piece of information may ever be revealed to the player except as the direct
    consequence of a manual action they performed (dragging a reagent, pouring,
    dripping/titrating, observing, recording an observation). This is a hard
-   architectural constraint, not a suggestion. In code: `PracticeModeController.AddDrop()`
-   and `.RecordObservation()` are the *only* places a reaction's state may change, and
-   both only ever fire from a UI interaction handler (see `DropperDragHandler`) — never
-   from a timer, `Start()`, or any other automatic trigger.
+   architectural constraint, not a suggestion. In code: `PracticeModeController.addDrop()`
+   and `.recordObservation()` are the *only* places a reaction's state may change, and
+   both only ever fire from a UI interaction (a `DragTarget.onAcceptWithDetails` or a
+   button press) — never from a `Timer`, `initState()`, or any other automatic trigger.
 2. **The protagonist is not a teacher.** An ordinary person of deliberately unclear
    identity/profession, who learns alongside the player, not above them.
    - **Scripted mode**: at specific, pre-planned curriculum moments, the protagonist
@@ -56,68 +56,93 @@ Content depth should not be artificially capped to match the syllabus.
    mocked/local for now — no real multiplayer/leaderboard infra until the core loop is
    proven.
 
-## 3. Architecture, briefly
+## 3. Tech stack (revised — read this if you remember an earlier Unity version)
+
+This project was originally scaffolded on Unity/C#, then rebuilt on **Flutter/Dart**
+before any real Unity work happened, because the user doesn't want to install or operate
+a game-engine editor locally (limited disk, and prefers not to touch it directly) and
+already has the exact Flutter toolchain set up for `prayer-qibla-app` (no local Android
+SDK there either — CI builds the APK). Flutter also solves, for free, a real gap the
+Unity version had: Unity's built-in UI `Text` component doesn't shape Arabic correctly,
+while Flutter already renders Arabic/RTL correctly (proven in `prayer-qibla-app`). There
+is no residual Unity content in this repo — the switch was total, not a dual-stack setup.
+
+## 4. Architecture, briefly
 
 ```
-Assets/_Project/Scripts/
-  Data/          — Kemika.Data: IonSpecies, Reagent, Reaction (ScriptableObjects).
-                    Design-time authorable in the Editor later; for the vertical slice
-                    they're built in code via .Create(...) factory methods instead of
-                    hand-authored .asset files.
-  Interaction/   — Kemika.Interaction: DropperDragHandler — the only input path that can
-                    advance a reaction (law 1).
-  Modes/         — Kemika.Modes: PracticeModeController (built). ChallengeModeController
-                    does not exist yet — do not add it before Practice Mode's mastery-
-                    threshold logic exists to gate it, per principle 3.
-  Localization/  — Kemika.Localization: LocalizedStrings, a plain Map (English/Arabic),
-                    no code-gen, no ARB files — same pattern as prayer-qibla-app's
-                    AppStrings. See "Known gaps" below re: Arabic rendering.
-  Bootstrap/     — Kemika.Bootstrap: SliceBootstrap builds the entire vertical slice's
-                    UI at runtime via [RuntimeInitializeOnLoadMethod], so no scene
-                    authoring is required to press Play and see it work.
+lib/
+  main.dart               — entry point, MaterialApp
+  l10n/
+    app_strings.dart       — bilingual (EN/AR) string map, same shape as
+                              prayer-qibla-app's AppStrings: a plain Map, no code-gen
+  data/
+    ion_species.dart        — IonSpecies (id, names, category)
+    reagent.dart             — Reagent (id, names, dropper tint color)
+    reaction.dart             — Reaction (ion + reagent + required drip count + result +
+                                 distractor descriptions for the record step)
+  modes/
+    practice_mode_controller.dart — PracticeModeController: drip -> gradual reveal ->
+                                 record loop, enforces law 1. ChallengeModeController
+                                 does not exist yet -- see TODO.md.
+  screens/
+    practice_slice_screen.dart — the vertical slice UI: Draggable dropper + DragTarget
+                                 beaker (gradual color lerp via AnimatedContainer),
+                                 record button, and a dialog-based multiple-choice
+                                 observation picker
 ```
+
+No external state management library (Provider/Riverpod/Bloc) — matches
+prayer-qibla-app's stated reasoning: the app isn't big enough yet to justify one.
+`PracticeModeController` exposes plain callbacks (`onProgressChanged`,
+`onReadyToRecord`, `onAttemptRecorded`); the owning screen calls `setState` from them,
+same shape as prayer-qibla-app's `home_shell.dart` owning state and passing it down.
 
 No `StudentProfile`/`KemidexEntry` classes exist yet. `PracticeModeController` keeps a
 per-session `AttemptRecord` list (attempt number, correct/incorrect, drops used) as the
 seed of that future system, but persistent profile/Kemidex storage is deliberately
 deferred until after the vertical slice proves the core interaction feel — see TODO.md.
 
-## 4. Known gaps (flag, don't silently paper over)
+## 5. Known gaps (flag, don't silently paper over)
 
-- **Arabic text rendering.** `LocalizedStrings` stores real Arabic strings, but Unity's
-  built-in legacy `UI.Text` component does not shape/reorder Arabic glyphs (no bidi, no
-  letter-joining) — Arabic text will render as disconnected, visually-wrong characters
-  as-is. Needs either TextMeshPro + an Arabic shaping/RTL solution, or a runtime
-  Arabic-reshaping library, before Arabic is actually shippable. Tracked in TODO.md.
-  English renders fine with the current legacy Text setup.
-- **No CLAUDE.md convention existed in prayer-qibla-app** (the sibling project this repo's
-  conventions were copied from) — this repo's `CLAUDE.md` was written from scratch using
-  Unity C# best judgment, not copied from a prior example.
-- **No Unity Editor was used to create this scaffold.** `ProjectSettings/` and
-  `Packages/manifest.json` are hand-authored minimal files, not Unity Hub output. Unity
-  is expected to fill in any missing default `ProjectSettings/*.asset` files itself on
-  first open. If Package Manager shows resolution warnings on first open, that's
-  expected for a hand-written `manifest.json` — let it auto-resolve/update.
+- **No CLAUDE.md convention existed in prayer-qibla-app** (the sibling project this
+  repo's conventions were copied from) — this repo's `CLAUDE.md` was written from
+  scratch using Flutter/Dart best judgment, not copied from a prior example.
+- **No `impeccable_flutter_lints`/`custom_lint`** (prayer-qibla-app's "AI-slop UI"
+  design-lint tooling) is wired in here yet — not added since it wasn't explicitly
+  asked for and this is still a single-screen prototype. Worth adopting once the UI
+  surface grows, for consistency with the sibling project.
+- **No real device testing yet.** The "low-end-Android-friendly" device target is a
+  stated goal, not yet verified against real hardware — see TODO.md.
 
-## 5. Open decisions
+## 6. Open decisions
 
 - Exact device floor for "low-end friendly" Android (needs profiling once the vertical
   slice is running on a real device).
 - When to move Challenge Mode's "vs friends" layer off local mocks and onto real backend
   infra.
 
-## 6. Settled feature decisions (don't re-litigate without new input)
+## 7. Settled feature decisions (don't re-litigate without new input)
 
+- **Flutter/Dart, not Unity.** Settled after the initial Unity scaffold, before any real
+  Unity work happened — see § 3 above for why. Do not suggest reverting to Unity without
+  new input from the user.
 - **Vertical slice first.** The chloride ion (Cl⁻) detected via AgNO3 (→ white AgCl
   precipitate) is the one fully-built lesson end-to-end before Kemidex, Challenge Mode,
   the protagonist system, or additional elements are touched.
 - **Placeholder/programmer art for the prototype.** Beaker/dropper/precipitate are flat
-  colored `UI.Image` rectangles, not real pixel art. Real DOS-pixel art is a later pass.
-- **Bilingual (Arabic + English) from day one, architecturally** — even though Arabic
-  rendering itself isn't solved yet (see Known gaps). The string-table shape is bilingual
-  now so it isn't a retrofit later.
+  colored `Container`/`AnimatedContainer` shapes, not real pixel art. Real DOS-pixel art
+  is a later pass.
+- **Bilingual (Arabic + English) from day one, architecturally**, and unlike the earlier
+  Unity attempt, Arabic actually renders correctly here — no follow-up work needed for
+  basic text rendering itself.
 - **Low-end-Android-friendly** is the device baseline (Android 8+, low RAM/GPU); iOS is
-  a secondary target. The DOS-pixel visual style is a deliberate hedge against this —
-  minimal GPU/fill-rate cost.
-- **Testing**: no automated EditMode/PlayMode tests yet — added once the vertical slice
-  proves the interaction "feel" is right, not before.
+  a secondary target. The DOS-pixel visual style (once real art lands) is a deliberate
+  hedge against this — minimal GPU/fill-rate cost.
+- **Testing**: no automated tests yet — added once the vertical slice proves the
+  interaction "feel" is right, not before. CI (`flutter analyze` + `flutter test` +
+  debug APK build) is wired up regardless, so regressions in what does exist are still
+  caught.
+- **CI builds the APK, not your machine** — same as prayer-qibla-app. You don't need
+  Android Studio, an Android SDK, or even a local Flutter install to get a working APK
+  out of this repo; push to `main` (or open a PR) and download it from the GitHub
+  Actions run's artifacts.
