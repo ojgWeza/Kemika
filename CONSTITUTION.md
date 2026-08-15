@@ -155,6 +155,13 @@ deferred until after the vertical slice proves the core interaction feel — see
   test` is deliberately *not* in CI yet — it exits nonzero with zero test files present
   (confirmed the hard way: the first CI run failed on exactly this), so it goes back in
   the moment the first real test file lands, not before.
+- **Feature-branch + PR workflow, not direct-to-main.** Every commit through
+  `b2b841f` (repo creation through the terminal-theme redesign) went straight to `main`
+  — that history isn't being rewritten. From this point on: one branch per change,
+  pushed, opened as a PR, merged by the user once it looks right (CI green is a good
+  signal, not a substitute for their review) — exactly the switch prayer-qibla-app's
+  own CONSTITUTION.md records making partway through that project. Don't revert to
+  direct-to-main without the user asking again.
 - **CI builds the APK, not your machine** — same as prayer-qibla-app. You don't need
   Android Studio, an Android SDK, or even a local Flutter install to get a working APK
   out of this repo; push to `main` (or open a PR) and download it from the GitHub
