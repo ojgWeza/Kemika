@@ -57,6 +57,19 @@ done — move it into "Done" rather than leaving it ambiguous.
       second, per the settled decision). Lets any future session sanity-check UI
       changes in a headless browser without Android tooling. See `CLAUDE.md`
       "Environment notes" for the exact recipe (there's a CDN gotcha to route around).
+- [x] **Extended QA pass** (headless browser, same recipe as above), beyond the happy
+      path: (1) releasing the dropper off-target does *not* advance the drip count or
+      change the beaker — law 1 holds for misses, not just hits; (2) dragging drips
+      past the 5th (already-ready state) doesn't crash or visually glitch; (3) picking
+      a wrong answer shows "Not quite — look again" and does **not** leak the equation;
+      (4) Record Observation can be reopened after a wrong answer, and a correct choice
+      on retry shows the equation as expected. Zero console/page errors across all four.
+      No new bugs found this pass. One caveat, environment-specific and not a real bug:
+      the ⁺/⁻/↓ glyphs in the equation feedback render as tofu boxes in this sandbox's
+      headless test because the Roboto webfont fetch is network-blocked — real
+      Android/iOS builds bundle fonts into the APK/IPA rather than fetching them, so
+      this shouldn't reproduce there, but it's unverified until someone checks a real
+      build (see the real-device item below).
 
 ## In progress / needs attention right now 🔄
 
